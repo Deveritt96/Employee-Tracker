@@ -8,11 +8,27 @@ const connection = mysql.createConnection({
     database: 'employees_db',
 });
 
+// Function to display the welcome message and prompt user to continue or exit
+const welcomeMessage = () => {
+    inquirer.prompt({
+        name: 'continue',
+        type: 'confirm',
+        message: 'Welcome! Do you want to continue to the menu?',
+        default: true
+    }).then(answer => {
+        if (answer.continue) {
+            menu(); // If the user chooses to continue, show the menu
+        } else {
+            exit(); // If the user chooses to exit, end the program
+        }
+    });
+};
+
 const menu = () => {
     inquirer.prompt({
         name: 'choice',
         type: 'list',
-        message: 'What would you like to do?',
+        message: 'Welcome!',
         choices: [
             'Display Departments',
             'Display Roles',
@@ -72,9 +88,10 @@ const showDepartments = () => {
 
 const showRoles = () => {
     connection.query(
-        (err, result) => {
+        'SELECT * FROM role',
+        (err, results) => {
             if (err) {
-                console.error('error displaying roles: ' + err);
+                console.error('Error displaying roles: ' + err);
                 return;
             }
             console.log('\nRoles:');
@@ -90,9 +107,10 @@ const showRoles = () => {
 
 const showEmployees = () => {
     connection.query(
-        (err, result) => {
+        'SELECT * FROM employee',
+        (err, results) => {
             if(err) {
-                console.error('error displaying employees: ' + err);
+                console.error('Error displaying employees: ' + err);
                 return;
             }
             console.log('\nEmployees: ');
@@ -102,7 +120,7 @@ const showEmployees = () => {
             menu();
         }
     )
-}
+};
 
 // function to add department
 
@@ -302,4 +320,4 @@ const exit = () => {
 };
 
 
-menu();
+welcomeMessage();
