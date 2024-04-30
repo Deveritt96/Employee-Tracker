@@ -10,6 +10,7 @@ const connection = mysql.createConnection({
 
 const menu = () => {
     inquirer.prompt({
+        name: 'menu',
         type: 'list',
         message: 'Welcome',
         choices: ['Display Departments',
@@ -20,5 +21,39 @@ const menu = () => {
         'Add Employee',
         'Update Employee Role',
         'Exit']
-    })
+    }).then((answers) => {
+        switch(answers.choice) {
+            case 'Display Departments':
+                // Call function to display departments
+                break;
+            case 'Display Roles':
+                // Call function to display roles
+                break;
+            // Add cases for other choices
+            case 'Exit':
+                connection.end(); // Close the connection to MySQL
+                console.log('Goodbye!');
+                break;
+            default:
+                console.log('Invalid choice');
+        }
+    });
 }
+
+
+// function to show department
+
+// function to show role
+
+// function to show employee
+
+// function to add department
+
+// function to add role
+
+// function to add employee
+
+// function to update an employee's role
+
+
+menu();
