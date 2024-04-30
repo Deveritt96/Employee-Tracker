@@ -8,22 +8,6 @@ const connection = mysql.createConnection({
     database: 'employees_db',
 });
 
-// Function to display the welcome message and prompt user to continue or exit
-const welcomeMessage = () => {
-    inquirer.prompt({
-        name: 'continue',
-        type: 'confirm',
-        message: 'Welcome! Do you want to continue to the menu?',
-        default: true
-    }).then(answer => {
-        if (answer.continue) {
-            menu(); // If the user chooses to continue, show the menu
-        } else {
-            exit(); // If the user chooses to exit, end the program
-        }
-    });
-};
-
 const menu = () => {
     inquirer.prompt({
         name: 'choice',
@@ -52,7 +36,11 @@ const menu = () => {
             'Exit': exit
         };
 
+        
         const action = actions[choice];
+        // Add console.log statements here
+        console.log('Choice:', choice);
+        console.log('Action:', action);
         if (action) {
             action().then(() => {
                 menu(); // After the action is complete, prompt the user again
@@ -281,6 +269,22 @@ const updateEmployeeRole = async () => {
     );
 };
 
+// function to fetch departments from the database
+const getDepartments = () => {
+    return new Promise((resolve, reject) => {
+        connection.query(
+            'SELECT * FROM department',
+            (err, results) => {
+                if (err) {
+                    reject(err);
+                    return;
+                }
+                resolve(results);
+            }
+        );
+    });
+};
+
 // Function to fetch employees from the database
 const getEmployees = () => {
     return new Promise((resolve, reject) => {
@@ -320,4 +324,4 @@ const exit = () => {
 };
 
 
-welcomeMessage();
+menu();
