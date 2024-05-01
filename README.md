@@ -8,7 +8,7 @@ Tracks employee, department, and roles employees through the terminal
 
 
 
-
+https://github.com/Deveritt96/Employee-Tracker/blob/main/assets/Employee%20Tracker.mkv
 
 
 
