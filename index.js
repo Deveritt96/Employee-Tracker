@@ -8,53 +8,53 @@ const connection = mysql.createConnection({
     database: 'employees_db',
 });
 
-const menu = () => {
-    inquirer.prompt({
-        name: 'choice',
-        type: 'list',
-        message: 'Welcome!',
-        choices: [
-            'Display Departments',
-            'Display Roles',
-            'Display Employees',
-            'Add Department',
-            'Add Role',
-            'Add Employee',
-            'Update Employee Role',
-            'Exit'
-        ]
-    }).then(answers => {
-        const choice = answers.choice;
-        const actions = {
-            'Display Departments': showDepartments,
-            'Display Roles': showRoles,
-            'Display Employees': showEmployees,
-            'Add Department': addDepartment,
-            'Add Role': addRole,
-            'Add Employee': addEmployee,
-            'Update Employee Role': updateEmployeeRole,
-            'Exit': exit
-        };
+let displayMenu = true;
 
-        
-        const action = actions[choice];
-        // Add console.log statements here
-        console.log('Choice:', choice);
-        console.log('Action:', action);
-        if (action) {
-            action().then(() => {
-                menu(); // After the action is complete, prompt the user again
+const menu = async () => {
+    while (true) {
+        if (displayMenu) {
+            const answers = await inquirer.prompt({
+                name: 'choice',
+                type: 'list',
+                message: 'Welcome!',
+                choices: [
+                    'Display Departments',
+                    'Display Roles',
+                    'Display Employees',
+                    'Add Department',
+                    'Add Role',
+                    'Add Employee',
+                    'Update Employee Role',
+                    'Exit'
+                ]
             });
-        } else {
-            console.log('Invalid choice');
-            menu(); // Restart the menu if choice is invalid
+
+            const choice = answers.choice;
+            const actions = {
+                'Display Departments': showDepartments,
+                'Display Roles': showRoles,
+                'Display Employees': showEmployees,
+                'Add Department': addDepartment,
+                'Add Role': addRole,
+                'Add Employee': addEmployee,
+                'Update Employee Role': updateEmployeeRole,
+                'Exit': exit
+            };
+
+            const action = actions[choice];
+            if (action) {
+                await action();
+            } else {
+                console.log('Invalid choice');
+            }
         }
-    });
+        displayMenu = true;
+    }
 };
 
 
-// function to show department
 
+// function to show department
 const showDepartments = () => {
     connection.query(
         'SELECT * FROM department',
@@ -67,13 +67,12 @@ const showDepartments = () => {
             results.forEach(department => {
                 console.log(`ID: ${department.id} | Name: ${department.department_name}`);
             });
-            menu();
+            displayMenu = true; // Set displayMenu to true to display the menu again
         }
     );
 };
 
 // function to show role
-
 const showRoles = () => {
     connection.query(
         'SELECT * FROM role',
@@ -86,13 +85,12 @@ const showRoles = () => {
             results.forEach(role => {
                 console.log(`ID: ${role.id} | Name: ${role.title} | Salary: ${role.salary} | Department ID: ${role.department_id}`)
             });
-            menu();
+            displayMenu = true; // Set displayMenu to true to display the menu again
         }
     );
 };
 
 // function to show employee
-
 const showEmployees = () => {
     connection.query(
         'SELECT * FROM employee',
@@ -105,42 +103,53 @@ const showEmployees = () => {
             results.forEach(employee => {
                 console.log(`ID: ${employee.id} | Name: ${employee.first_name} ${employee.last_name} | Role ID: ${employee.role_id} | Manager ID: ${employee.manager_id}`)
             });
-            menu();
+            displayMenu = true; // Set displayMenu to true to display the menu again
         }
     )
 };
 
 // function to add department
-
 const addDepartment = async () => {
-    const departmentData = await inquirer.prompt({
-        name: 'departmentName',
-        type: 'input',
-        message: 'Enter the name of the department:'
-    });
+    const departmentData = await inquirer.prompt([
+        {
+            name: 'id',
+            type: 'input',
+            message: 'Enter the ID of the department:'
+        },
+        {
+            name: 'departmentName',
+            type: 'input',
+            message: 'Enter the name of the department:'
+        }
+    ]);
 
-    const { departmentName } = departmentData;
+    const { id, departmentName } = departmentData;
 
     connection.query(
-        'INSERT INTO department (department_name) VALUES (?)',
-        [departmentName],
+        'INSERT INTO department (id, department_name) VALUES (?, ?)',
+        [id, departmentName],
         (err, result) => {
             if (err) {
                 console.error('Error adding department: ' + err);
                 return;
             }
             console.log(`\nDepartment ${departmentName} added successfully.`);
-            menu(); // After adding the department, go back to the main menu
+            displayMenu = true; // After adding the department, go back to the main menu
         }
     );
 };
 
-// function to add role
 
+// function to add role
 const addRole = async () => {
     const departments = await getDepartments(); // Assume you have a function to fetch departments
 
     const roleData = await inquirer.prompt([
+        {
+            name: 'id',
+            type: 'input',
+            message: 'Enter the ID of the role:'
+        },
         {
             name: 'title',
             type: 'input',
@@ -162,28 +171,31 @@ const addRole = async () => {
         }
     ]);
 
-    const { title, salary, departmentId } = roleData;
+    const { id, title, salary, departmentId } = roleData;
 
     connection.query(
-        'INSERT INTO role (title, salary, department_id) VALUES (?, ?, ?)',
-        [title, salary, departmentId],
+        'INSERT INTO role (id, title, salary, department_id) VALUES (?, ?, ?, ?)',
+        [id, title, salary, departmentId],
         (err, result) => {
             if (err) {
                 console.error('Error adding role: ' + err);
                 return;
             }
             console.log(`\nRole ${title} added successfully.`);
-            menu();
+            displayMenu = true; // Set displayMenu to true to display the menu again
         }
     );
 };
 
-// function to add employee
-
 const addEmployee = async () => {
-    const roles = await getRoles(); // Assume you have a function to fetch roles
+    const roles = await getRoles(); 
 
     const employeeData = await inquirer.prompt([
+        {
+            name: 'id',
+            type: 'number',
+            message: 'Enter the ID for the employee:'
+        },
         {
             name: 'firstName',
             type: 'input',
@@ -210,21 +222,22 @@ const addEmployee = async () => {
         }
     ]);
 
-    const { firstName, lastName, roleId, managerId } = employeeData;
+    const { id, firstName, lastName, roleId, managerId } = employeeData;
 
     connection.query(
-        'INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES (?, ?, ?, ?)',
-        [firstName, lastName, roleId, managerId || null],
+        'INSERT INTO employee (id, first_name, last_name, role_id, manager_id) VALUES (?, ?, ?, ?, ?)',
+        [id, firstName, lastName, roleId, managerId || null],
         (err, result) => {
             if (err) {
                 console.error('Error adding employee: ' + err);
                 return;
             }
             console.log(`\nEmployee ${firstName} ${lastName} added successfully.`);
-            menu(); // After adding the employee, go back to the main menu
+            displayMenu = true; // After adding the employee, go back to the main menu
         }
     );
 };
+
 
 // function to update an employee's role
 
@@ -264,7 +277,7 @@ const updateEmployeeRole = async () => {
                 return;
             }
             console.log(`\nEmployee role updated successfully.`);
-            menu(); // After updating the employee role, go back to the main menu
+            displayMenu = true; // After updating the employee role, go back to the main menu
         }
     );
 };
@@ -285,11 +298,11 @@ const getDepartments = () => {
     });
 };
 
-// Function to fetch employees from the database
-const getEmployees = () => {
+// Function to fetch roles from the database
+const getRoles = () => {
     return new Promise((resolve, reject) => {
         connection.query(
-            'SELECT * FROM employee',
+            'SELECT * FROM role',
             (err, results) => {
                 if (err) {
                     reject(err);
@@ -301,11 +314,11 @@ const getEmployees = () => {
     });
 };
 
-// Function to fetch roles from the database
-const getRoles = () => {
+// Function to fetch employees from the database
+const getEmployees = () => {
     return new Promise((resolve, reject) => {
         connection.query(
-            'SELECT * FROM role',
+            'SELECT * FROM employee',
             (err, results) => {
                 if (err) {
                     reject(err);
